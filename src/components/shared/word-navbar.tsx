@@ -1,27 +1,19 @@
-import axios from "axios"
-import { useEffect } from "react"
-
-
+import {Link} from "react-router-dom"
 export default function Wordnavbar() {
+  
 
-  useEffect(()=>{
-    get()
-  },[])
-  async function get(){
-    try {
-          const {data}=await axios.get("http://localhost:8080/api/notes")
-          console.log(data)      
-    } catch (error) {
-       console.log(error)
-    }
-
-  }
   return ( 
-    <div className="w-1/2 h-full flex flex-wrap justify-between items-center bg-zinc-950">
-        <h1>Logo</h1>
-        <p className="text-xl font-bold  text-gray-300">WELCOME TO NOTES</p>
-        <h1 className="text-6xl  font-bold  text-white">Never lose a <br /> thought < br />  Speak it. Save it</h1>
-        <h4 className="text-md text-gray-300  text-bold  w-80"  >AI Voice Keyboard  and privare voice-to-text  transcription,  perfect capturing lectures and recording meetings</h4>   
+    <div className=" bg-zinc-950 w-1/2 h-full pl-35 justify-center  flex flex-col space-y-2  ">
+      <h1 className="text-white text-[50px]">Logo</h1>
+      <p className="text-[25px] text-white tracking-wide "> Eslatmalarga xush kelibsiz</p>
+      <h2 className="text-white tracking-wide  text-[40px] ">Hech qachon fikrni yoqotmang, Yozib saqlang </h2>
+      <p className="text-[22px] text-gray-300 " >Eslatmalarni va fikrlarni  so'zlarda va ovozda saqlab qoyishingiz uchun mahsus dastur</p>
+     <Link to={'/post'} ><button   className="w-70 mt-10 hover:border h-12 rounded-[28px] bg-white cursor-pointer text-center font-sans-reg  text-[20px] text-zinc-900"> Boshlash </button></Link>   
     </div>
   )
 }
+
+
+
+
+

@@ -1,9 +1,48 @@
+@font-face {
+  font-family: MontserratBold;
+  src: url('./assets/fonts/Montserrat-Bold.ttf');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face{
+  font-family: InterRegular;
+  src:url('./assets/fonts/Inter_28pt-Regular.ttf');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap
+}
+
+@font-face{
+  font-family: InterBold;
+  src:url('./assets/fonts/Inter_28pt-Bold.ttf');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
+
+
+/* Scrollbarni butunlay yashirish (Hamma brauzerlar uchun) */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE va Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
 
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
@@ -44,8 +83,9 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-heading:'MontserratBold', sans-serif;
+    --font-sans-reg: 'InterRegular', sans-serif;
+    --font-sans-bold:'InterBold',sans-serif;
 }
 
 :root {
@@ -91,7 +131,11 @@
     @apply bg-background text-foreground;
     }
   html {
-    @apply font-sans;
+    @apply font-sans-reg;
+    }
+
+    h1,h2,h3,h4,h5,h6{
+      @apply font-heading
     }
 }
 
