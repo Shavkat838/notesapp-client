@@ -17,7 +17,7 @@ type AuthStoreType={
 }
 
 export const useAuthStore=create<AuthStoreType>((set)=>({
-    isLoading:false,
+    isLoading:localStorage.getItem("accessToken")? true :false,
     isAuth:false,
     user:{}as IIUser,
     setLoading:(param)=>(set({isLoading:param})),

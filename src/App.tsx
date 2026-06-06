@@ -6,11 +6,12 @@ import AuthPage from "./pages/auth";
 import { useAuthStore } from "./store/auth-store";
 import { $authApi } from '@/https/axios';
 import { useEffect } from "react";
+import PostLoading from "./components/loadings/post-loading";
 
 
 
 function App() {
-  const {isAuth,setLoading,setAuth,setUser}=useAuthStore()
+  const {isAuth,isLoading,setLoading,setAuth,setUser}=useAuthStore()
 
   async function checkAuth(){
     try {
@@ -32,7 +33,19 @@ function App() {
     if(localStorage.getItem("accessToken")){
       checkAuth()
     }
+    else{
+      setLoading(false)
+    }
   },[])
+
+
+  if (isLoading) {
+    return (
+      <div className="loading-container bg-zinc-950 w-full h-screen">
+           < PostLoading />
+      </div>
+    );
+  }
 
 
   return (
