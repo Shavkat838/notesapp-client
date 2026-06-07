@@ -4,13 +4,13 @@ import { IoTrashOutline } from "react-icons/io5";
 import { IoArchive } from "react-icons/io5";
 import { useDetailStore } from "@/hooks/use-detail";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import  $api from "@/https/api";
+import $api from "@/https/api";
 import type { INote } from "@/interfaces/type.note";
 import { toast } from "sonner";
 import { formatDate } from "@/constans/formatdata";
 import { MdOutlineUnarchive } from "react-icons/md";
 import { useStatusStore } from "@/hooks/use-status";
-import { LiaTrashRestoreSolid } from "react-icons/lia";
+
 import { MdEdit } from "react-icons/md";
 import {
   AlertDialog,
@@ -22,14 +22,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import {  useState } from "react";
+import { useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { IoArrowBackOutline } from "react-icons/io5";
 
 export default function NoteDetail() {
-  const { id } = useDetailStore();
+  const { id, setId } = useDetailStore();
   const queryClient = useQueryClient();
-  const { setId } = useDetailStore();
   const { status } = useStatusStore();
   const [editedNote, setEditedNote] = useState(false);
 
@@ -42,13 +42,10 @@ export default function NoteDetail() {
     enabled: !!id,
   });
 
-
-  
   const [title, setTitle] = useState(data?.title);
   const [content, setContent] = useState(data?.content);
 
-
-  const { mutate: setTrash, error } = useMutation({
+  const { mutate: setTrash } = useMutation({
     mutationFn: async (id: string) => {
       const { data } = await $api.delete(id);
       return data;
@@ -56,14 +53,9 @@ export default function NoteDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       setId(null);
-      toast.success("O`chirildi, Savatdan tiklashingiz mumkin!");
-    },
-
-    onError: () => {
-      toast.error(`Xatolik:${error}`);
+      toast.success("O`chirildi!");
     },
   });
-
   const { mutate: setRestore } = useMutation({
     mutationFn: async (id: string) => {
       const { data } = await $api.patch(`/${id}/restore`);
@@ -74,42 +66,27 @@ export default function NoteDetail() {
       setId(null);
       toast.success("Eslatma tiklandi!");
     },
-    onError: (param) => {
-      console.log(param);
-    },
   });
-
-  const { mutate: archiveMutate, error: archiveError } = useMutation({
+  const { mutate: archiveMutate } = useMutation({
     mutationFn: async (id: string) => {
       await $api.patch(`/${id}/archive`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       setId(null);
-      toast.success(
-        `${data?.isArchived ? "Eslatma arxivdan chiqarildi" : "Eslatma arxivlandi!"}`,
-      );
-    },
-    onError: () => {
-      toast.error(`Xatolik:${archiveError}`);
+      toast.success("Muvaffaqiyatli!");
     },
   });
-
   const { mutate: hardDelete } = useMutation({
     mutationFn: async (id: string) => {
       await $api.delete(`/${id}/force`);
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       setId(null);
-      toast.success("Eslatma butunlay ochirildi");
-    },
-    onError: (error) => {
-      toast.error(error.message);
+      toast.success("Butunlay ochirildi");
     },
   });
-
   const { mutate: duplicateNote } = useMutation({
     mutationFn: async (id: string) => {
       const { data } = await $api.post(`${id}/duplicate`);
@@ -118,143 +95,117 @@ export default function NoteDetail() {
     onSuccess: (currentdata) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       setId(currentdata._id);
-      toast.success("Eslatma duplicati tayyor!");
+      toast.success("Duplikati tayyor!");
     },
-    onError: (error) => {
-      console.log(error);
+  });
+  const { mutate: handleChange } = useMutation({
+    mutationFn: async () => {
+      const { data: updatedData } = await $api.put(`/${id}`, {
+        title: title,
+        content: content,
+      });
+      return updatedData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      setEditedNote(false);
+      toast.success("Eslatma yangilandi");
     },
   });
 
-
-  const {mutate:handleChange}=useMutation({
-    mutationFn:async()=>{
-     const {data:updatedData}=await $api.put(`/${id}`,{title:title,content:content})
-     return updatedData
-    },
-
-    onSuccess:()=>{
-      queryClient.invalidateQueries({queryKey:["notes"]})
-      setEditedNote(false)
-      toast.success("Eslatma yangilandi")
-    },
-
-    onError:(error)=>{
-      toast.error(error.message)
-    }
-  })
-
-  if (isLoading) {
-    return <p>Loading...</p>;
-  }
+  if (isLoading) return <p className="text-white p-5">Yuklanmoqda...</p>;
 
   if (!data) {
-    return <p className="text-white text-center py-10  px-100">Birorta eslatmani tanlang! </p>;
+    return (
+      <div className="hidden md:flex flex-1 text-zinc-500 items-center justify-center italic">
+        Birorta eslatmani tanlang!
+      </div>
+    );
   }
 
-  if (isError) {
-    toast.error("Kutilmagan xatolik");
-  }
+  if (isError) toast.error("Kutilmagan xatolik");
 
   return (
-    <div className="w-260 h-full  border border-gray-600">
-      <div className="w-full  border border-gray-600 flex px-10 items-center justify-between">
-        <div className="flex flex-col justify-between min-w-1/5  h-full py-6  ">
-          <div className="flex items-center gap-2">
-            <CiClock1
+    <div
+      className={`flex-1 h-full bg-gray-900 border-t md:border-t-0 border-zinc-800 ${id ? "flex flex-col" : "hidden md:flex"}`}
+    >
+      <div className="w-full h-16 border-b border-zinc-800 flex px-4 md:px-8 items-center justify-between shrink-0">
+        {/* Chap tomon: Orqaga tugmasi va kichik sana */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setId(null)}
+            className="p-2 md:hidden text-gray-400 hover:text-white bg-zinc-800 rounded-lg cursor-pointer flex-none"
+          >
+            <IoArrowBackOutline size={20} />
+          </button>
+          <div className="flex items-center gap-1.5 bg-zinc-800/40 px-2 py-1 rounded-md border border-zinc-800 flex-none">
+            <CiClock1 style={{ color: data.color }} size={14} />
+            <span
               style={{ color: data.color }}
-              size={17}
-              className="text-gray-300"
-            />
-            <p style={{ color: data.color }} className="text-sm text-gray-400">
+              className="text-xs text-gray-400"
+            >
               {formatDate(data.createdAt)}
-            </p>
+            </span>
           </div>
-          {editedNote ? (
-            <Input
-              value={title??data.title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="border-none bg-none text-2xl text-gray-100 min-w-100"
-            />
-          ) : (
-            <h1 className="text-2xl text-gray-100 mt-2">{data.title}</h1>
-          )}
         </div>
-        <div className="flex items-center gap-5 w-1/4  h-full py-6">
+        <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
           <div
-            onClick={() => setEditedNote(true)}
-            title="update"
-            className={`w-10 h-10 flex items-center    ${(status == "ARCHIVE" || status == "TRASH") && "hidden"}  justify-center cursor-pointer hover:bg-gray-800  rounded-md  border border-gray-600`}
+            onClick={() => setEditedNote(!editedNote)}
+            className={`w-9 h-9 flex items-center ${(status == "ARCHIVE" || status == "TRASH") && "hidden"} justify-center cursor-pointer ${editedNote ? "bg-emerald-600/20 border-emerald-500 text-emerald-400" : "hover:bg-zinc-800 text-gray-300"} rounded-lg border border-zinc-800 transition-colors flex-none`}
           >
-            <MdEdit size={20} className="text-white" />
+            <MdEdit size={18} />
           </div>
+
           <div
-            title="duplicate"
             onClick={() => duplicateNote(data._id)}
-            className={`w-10 h-10 flex items-center    ${(status == "ARCHIVE" || status == "TRASH") && "hidden"}  justify-center cursor-pointer hover:bg-gray-800  rounded-md  border border-gray-600`}
+            className={`w-9 h-9 flex items-center ${(status == "ARCHIVE" || status == "TRASH") && "hidden"} justify-center cursor-pointer hover:bg-zinc-800 rounded-lg border border-zinc-800 flex-none`}
           >
-            <BiSolidDuplicate size={20} className="text-white" />
+            <BiSolidDuplicate size={18} className="text-gray-300" />
           </div>
+
           <div
             onClick={
               data.isTrashed
                 ? () => setRestore(data._id)
                 : () => setTrash(data._id)
             }
-            className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-800  rounded-md  border border-gray-600"
+            className="w-9 h-9 flex items-center justify-center cursor-pointer hover:bg-zinc-800 rounded-lg border border-zinc-800 flex-none"
           >
-            {data.isTrashed ? (
-              <LiaTrashRestoreSolid
-                title="restore"
-                size={20}
-                className="text-white"
-              />
-            ) : (
-              <IoTrashOutline title="delete" size={20} className="text-white" />
-            )}
+            <IoTrashOutline size={18} className="text-gray-300" />
           </div>
 
           <div
-            title="archive"
             onClick={() => archiveMutate(data._id)}
-            className={`w-10 h-10 flex items-center ${status == "TRASH" && "hidden"}   justify-center cursor-pointer hover:bg-gray-800  rounded-md  border border-gray-600`}
+            className={`w-9 h-9 flex items-center ${status == "TRASH" && "hidden"} justify-center cursor-pointer hover:bg-zinc-800 rounded-lg border border-zinc-800 flex-none`}
           >
             {data.isArchived ? (
-              <MdOutlineUnarchive
-                title="unarchive"
-                size={20}
-                className="text-white"
-              />
+              <MdOutlineUnarchive size={18} className="text-emerald-400" />
             ) : (
-              <IoArchive size={20} className="text-white" />
+              <IoArchive size={18} className="text-gray-300" />
             )}
           </div>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <div
-                title="delete"
-                className={`${status === "TRASH" ? "block" : "hidden"} w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-800  rounded-md  border border-gray-600 `}
+                className={`${status === "TRASH" ? "flex" : "hidden"} w-9 h-9 items-center justify-center cursor-pointer hover:bg-zinc-800 rounded-lg border border-zinc-800 flex-none`}
               >
-                <IoTrashOutline size={20} className="text-red-500" />
+                <IoTrashOutline size={18} className="text-red-500" />
               </div>
             </AlertDialogTrigger>
-            <AlertDialogContent className="w-120 bg-zinc-100">
+            <AlertDialogContent className="w-[90%] max-w-md bg-zinc-900 border-zinc-800 text-white rounded-xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>
-                  Haqqiqatdan ushbu eslatmani o'chirmoqchimisiz?
+                  Haqiqatdan ushbu eslatmani butunlay o'chirmoqchimisiz?
                 </AlertDialogTitle>
               </AlertDialogHeader>
-              <AlertDialogDescription className="flex items-center justify-end gap-2">
-                <AlertDialogCancel
-                  variant={"outline"}
-                  className="cursor-pointer"
-                >
+              <AlertDialogDescription className="flex items-center justify-end gap-2 mt-4">
+                <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">
                   Yo'q
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => hardDelete(data._id)}
-                  variant={"destructive"}
-                  className="cursor-pointer"
+                  className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   O'chirish
                 </AlertDialogAction>
@@ -263,22 +214,46 @@ export default function NoteDetail() {
           </AlertDialog>
         </div>
       </div>
-      <div className="w-full px-10 py-8">
-        {editedNote ? (
-          <Input
-            value={content??data.content}
-            onChange={(e) => setContent(e.target.value)}
-            className="border-none bg-none text-2xl text-gray-300"
-          />
-        ) : (
-          <h1 className="text-md text-gray-300 ">{data.content}</h1>
-        )}
+
+      <div className="w-full flex-1 px-4 md:px-8 py-6 overflow-y-auto pb-24 flex flex-col gap-4">
+        <div className="w-full flex-none">
+          {editedNote ? (
+            <Input
+              defaultValue={data.title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="h-11 bg-zinc-950 border-zinc-800 text-white text-xl font-bold rounded-xl focus-visible:ring-emerald-600"
+              placeholder="Sarlavha..."
+            />
+          ) : (
+            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-100 wrap-break-word tracking-tight leading-tight">
+              {data.title}
+            </h1>
+          )}
+        </div>
+
+        <div className="w-full flex-1 min-h-0 flex flex-col gap-4">
+          {editedNote ? (
+            <div className="w-full flex-1 flex flex-col gap-4 min-h-0">
+              <textarea
+                defaultValue={data.content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full flex-1 min-h-50 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-gray-300 focus:outline-none focus:border-emerald-600 resize-none text-base leading-relaxed"
+                placeholder="Eslatma matni..."
+              />
+              <Button
+                onClick={() => handleChange()}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11 text-sm font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-all flex-none"
+              >
+                Saqlash
+              </Button>
+            </div>
+          ) : (
+            <p className="text-base md:text-lg text-gray-300 whitespace-pre-wrap leading-relaxed tracking-wide">
+              {data.content}
+            </p>
+          )}
+        </div>
       </div>
-      {editedNote && (
-        <Button onClick={()=>handleChange()} className="bg-amber-300 min-w-40   cursor-pointer  rounded-md ml-50   ">
-          Saqlash
-        </Button>
-      )}
     </div>
   );
 }

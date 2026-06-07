@@ -7,20 +7,21 @@ import { useDetailStore } from "@/hooks/use-detail";
 import { useAuthStore } from "@/store/auth-store";
 
 export default function Post() {
-  const {id}=useDetailStore()
-  const {isLoading}=useAuthStore()
+  const { id } = useDetailStore();
+  const { isLoading } = useAuthStore();
 
-  if(isLoading){
-    return < PostLoading/>
+  if (isLoading) {
+    return <PostLoading />;
   }
+
   return (
-    <div className="w-ful h-screen bg-gray-900">
-        <div className="container w-full h-screen mx-auto flex">
-            < AppSidebar />
-            < NoteList />
-            < NoteDetail key={id} />
-        </div>
-        <CreateNote/>
+    <div className="w-full min-h-screen md:h-screen bg-gray-900 overflow-hidden">
+      <div className="w-full h-full mx-auto flex flex-col md:flex-row relative">
+        <AppSidebar />
+        <NoteList />
+        <NoteDetail key={id} />
+      </div>
+      <CreateNote />
     </div>
-  )
+  );
 }

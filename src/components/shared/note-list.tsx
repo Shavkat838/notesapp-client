@@ -5,7 +5,7 @@ import { HiSortAscending } from "react-icons/hi";
 import { CiClock1 } from "react-icons/ci";
 import { useStatusStore } from "@/hooks/use-status";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import  $api  from "@/https/api";
+import $api from "@/https/api";
 import type { INote, INoteList } from "@/interfaces/type.note";
 import { toast } from "sonner";
 import { CiMenuKebab } from "react-icons/ci";
@@ -21,7 +21,7 @@ import { useFilterStore } from "@/hooks/use-filter";
 import { useState } from "react";
 import { RiUnpinLine } from "react-icons/ri";
 import { FaSort } from "react-icons/fa6";
-import { HiOutlineArrowsExpand } from "react-icons/hi";
+// import { HiOutlineArrowsExpand } from "react-icons/hi";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,8 +48,6 @@ export default function NoteList() {
     tagValue,
   } = useFilterStore();
 
- 
-
   const queryClient = useQueryClient();
 
   async function getall() {
@@ -63,7 +61,6 @@ export default function NoteList() {
     });
     return data;
   }
-
   async function getArchive() {
     const { data } = await $api.get("/archive", {
       params: {
@@ -75,7 +72,6 @@ export default function NoteList() {
     });
     return data;
   }
-
   async function getTrashed() {
     const { data } = await $api.get("/trash", {
       params: {
@@ -95,7 +91,6 @@ export default function NoteList() {
       return await getall();
     },
   });
-
   const { data: tags } = useQuery<string[]>({
     queryKey: ["tags"],
     queryFn: async () => {
@@ -103,12 +98,7 @@ export default function NoteList() {
       return data;
     },
   });
-
-  const {
-    mutate: togglePin,
-    error,
-    isPending,
-  } = useMutation({
+  const { mutate: togglePin, isPending } = useMutation({
     mutationFn: async (id: string) => {
       const { data } = await $api.patch(`${id}/pinned`);
       return data;
@@ -119,11 +109,7 @@ export default function NoteList() {
         `${data.isPinned ? "Eslatma qadaldi!" : "Eslatma olib tashlandi"}`,
       );
     },
-    onError: () => {
-      toast.error(`Xatolik:${error}`);
-    },
   });
-
   const { mutate: clearTrashAll } = useMutation({
     mutationFn: async () => {
       const { data } = await $api.delete("/trash/clear");
@@ -134,76 +120,49 @@ export default function NoteList() {
       setId(null);
       toast.success(data.message);
     },
-    onError: (error) => {
-      console.log(error.message);
-    },
   });
-
   const { mutate: restoreTrashAll } = useMutation({
     mutationFn: async () => {
       const { data } = await $api.patch("/trash/restore-all");
       return data;
     },
-
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       setId(null);
       toast.success(data.message);
     },
-
-    onError: (error) => {
-      console.log(error.message);
-    },
   });
-
   const { mutate: deleteToTrash } = useMutation({
     mutationFn: async (param: "archive" | "all") => {
       const { data } = await $api.patch(`trash/all?type=${param}`);
       return data;
     },
-
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       setId(null);
       toast.success(data.message);
     },
-    onError: (error) => {
-      toast.error(error.message);
-    },
   });
-
   const { mutate: archiveAll } = useMutation({
     mutationFn: async () => {
       const { data } = await $api.patch("/archive/all");
       return data;
     },
-
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       setId(null);
       toast.success(data.message);
     },
-
-    onError: (error) => {
-      toast.error(error.message);
-    },
   });
-
   const { mutate: unarchiveAll } = useMutation({
     mutationFn: async () => {
       const { data } = await $api.patch("/unarchive/all");
       return data;
     },
-
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      console.log(data)
       setId(null);
       toast.success(data.message);
-    },
-
-    onError: (error) => {
-      toast.error(error.message);
     },
   });
 
@@ -211,72 +170,67 @@ export default function NoteList() {
     setIsOpenType(param);
     setIsOpenModal(true);
   }
-
   function changeSearchValue() {
     setIsOpenModal(false);
     setSearch(word);
-    // setWord("")
   }
-
   function changeTag(param: string) {
     setIsOpenModal(false);
     setTag(param);
   }
 
-  if (isLoading) {
-    return <p>Yuklanmoqda...</p>;
-  }
-
-  if (isError) {
-    toast.error("Kutilmagan xatolik");
-  }
+  if (isLoading) return <p className="text-white p-5">Yuklanmoqda...</p>;
+  if (isError) toast.error("Kutilmagan xatolik");
 
   return (
-    <div className="flex flex-col h-full overflow-hidden w-100  relative border border-gray-600">
+    <div
+      className={`flex flex-col h-full overflow-hidden w-full md:w-96 shrink-0 relative border-b md:border-b-0 md:border-r border-zinc-800 ${id ? "hidden md:flex" : "flex"}`}
+    >
       {/* header */}
-      <div className="w-full flex-none h-24 border  border-gray-600 flex justify-between items-center">
-        <div className="w-1/2 h-full flex items-center justify-center gap-4">
-          <h2 className="text-gray-100 text-2xl font-bold">
+      <div className="w-full flex-none h-20 border-b border-zinc-800 flex justify-between items-center px-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-gray-100 text-xl font-bold">
             {status == "ALL"
               ? "Notes"
               : status == "ARCHIVE"
                 ? "Archive"
                 : "Trash"}
           </h2>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-700  ">
-            <p className="text-white ">{data?.length}</p>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-zinc-800">
+            <p className="text-white text-xs">{data?.length}</p>
           </div>
         </div>
-        <div className="w-1/2 h-full flex items-center justify-end gap-4 mr-4   ">
+        <div className="flex items-center gap-3">
           <Popover
             open={isOpenType == "search" && isOpenModal}
             onOpenChange={(open) => setIsOpenModal(open)}
           >
             <PopoverTrigger asChild>
               <CiSearch
-                title="search"
                 onClick={() => selectFilter("search")}
-                size={26}
-                className="text-gray-500  hover:text-gray-200 cursor-pointer"
+                size={24}
+                className="text-gray-400 hover:text-gray-200 cursor-pointer"
               />
             </PopoverTrigger>
             <PopoverContent
-              align="start"
-              className="w-90   p-3 flex items-start justify-between"
+              align="end"
+              className="w-80 bg-zinc-900 border-zinc-800 p-2 flex gap-2"
             >
               <Input
                 value={word}
                 onChange={(e) => setWord(e.target.value)}
-                placeholder="search..."
-              ></Input>
+                placeholder="Qidiruv..."
+                className="bg-zinc-950 border-zinc-800 text-white"
+              />
               <Button
                 onClick={changeSearchValue}
-                className="py-3 px-4 cursor-pointer"
+                className="cursor-pointer bg-emerald-600 hover:bg-emerald-700"
               >
-                Qidiring
+                OK
               </Button>
             </PopoverContent>
           </Popover>
+
           <Popover
             open={isOpenType == "tags" && isOpenModal}
             onOpenChange={(open) => setIsOpenModal(open)}
@@ -284,33 +238,30 @@ export default function NoteList() {
             <PopoverTrigger asChild>
               <FaSort
                 onClick={() => selectFilter("tags")}
-                size={24}
-                className="text-gray-500 hover:text-gray-200 cursor-pointer"
+                size={20}
+                className="text-gray-400 hover:text-gray-200 cursor-pointer"
               />
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-90 p-3 border-zinc-800">
-              <div className="flex flex-wrap gap-2 items-start w-full">
+            <PopoverContent
+              align="end"
+              className="w-80 p-3 bg-zinc-900 border-zinc-800"
+            >
+              <div className="flex flex-wrap gap-2">
                 <Button
                   onClick={() => changeTag("")}
-                  className={`h-8 px-3 text-xs cursor-pointer  ${tagValue === "" ? "bg-zinc-700" : "bg-zinc-900"} text-zinc-300 hover:bg-zinc-800 border border-zinc-700`}
+                  className={`h-7 px-2 text-xs cursor-pointer ${tagValue === "" ? "bg-zinc-700" : "bg-zinc-950"} text-zinc-300 border border-zinc-700`}
                 >
                   #All
                 </Button>
-                {tags && tags.length > 0 ? (
-                  tags.map((item, index) => (
-                    <Button
-                      onClick={() => changeTag(item)}
-                      key={index}
-                      className={`h-8 px-3 text-xs cursor-pointer  ${tagValue === item ? "bg-zinc-700" : "bg-zinc-900"} text-zinc-300 hover:bg-zinc-800 border border-zinc-700`}
-                    >
-                      #{item}
-                    </Button>
-                  ))
-                ) : (
-                  <p className="text-xs text-zinc-500 italic">
-                    Teglar mavjud emas
-                  </p>
-                )}
+                {tags?.map((item, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => changeTag(item)}
+                    className={`h-7 px-2 text-xs cursor-pointer ${tagValue === item ? "bg-zinc-700" : "bg-zinc-950"} text-zinc-300 border border-zinc-700`}
+                  >
+                    #{item}
+                  </Button>
+                ))}
               </div>
             </PopoverContent>
           </Popover>
@@ -318,14 +269,14 @@ export default function NoteList() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <CiMenuKebab
-                size={24}
-                className="text-gray-500 hover:text-gray-200 cursor-pointer"
+                size={22}
+                className="text-gray-400 hover:text-gray-200 cursor-pointer"
               />
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-50">
+            <DropdownMenuContent className="w-48 bg-zinc-900 border-zinc-800 text-white">
               {status == "ALL" ? (
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuLabel>Harakatlar</DropdownMenuLabel>
                   <DropdownMenuItem
                     onClick={() => deleteToTrash("all")}
                     className="cursor-pointer"
@@ -341,7 +292,7 @@ export default function NoteList() {
                 </DropdownMenuGroup>
               ) : status == "ARCHIVE" ? (
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuLabel>Harakatlar</DropdownMenuLabel>
                   <DropdownMenuItem
                     onClick={() => deleteToTrash("archive")}
                     className="cursor-pointer"
@@ -357,7 +308,7 @@ export default function NoteList() {
                 </DropdownMenuGroup>
               ) : (
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuLabel>Harakatlar</DropdownMenuLabel>
                   <DropdownMenuItem
                     onClick={() => restoreTrashAll()}
                     className="cursor-pointer"
@@ -368,7 +319,7 @@ export default function NoteList() {
                     onClick={() => clearTrashAll()}
                     className="cursor-pointer"
                   >
-                    Barchasini o'chirish
+                    Savatni tozalash
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               )}
@@ -376,97 +327,85 @@ export default function NoteList() {
           </DropdownMenu>
         </div>
       </div>
-      {/* sorting */}
-      <div className="w-full flex-none h-18 border border-gray-600  flex  items-center justify-around">
+      <div className="w-full flex-none h-14 border-b border-zinc-800 flex items-center justify-around bg-zinc-950/50">
         <div
           onClick={() => setSort("LATEST")}
-          className={`w-1/3 h-1/2  rounded-2xl flex items-center justify-center cursor-pointer gap-2 ${sortStatus == "LATEST" && "bg-gray-800"}   hover:bg-gray-800`}
+          className={`px-3 py-1 rounded-xl flex items-center cursor-pointer gap-2 ${sortStatus == "LATEST" && "bg-zinc-800"} hover:bg-zinc-800`}
         >
-          <HiOutlineSortDescending
-            size={20}
-            className="text-gray-500  hover:text-gray-200 cursor-pointer "
-          />
-          <p className="text-md text-gray-300">Yangi</p>
+          <HiOutlineSortDescending size={18} className="text-gray-400" />
+          <p className="text-sm text-gray-300">Yangi</p>
         </div>
         <div
           onClick={() => setSort("ALPHABETICAL")}
-          className={`w-1/3 h-1/2  rounded-2xl flex items-center justify-center cursor-pointer gap-2 ${sortStatus === "ALPHABETICAL" && "bg-gray-800"}   hover:bg-gray-800`}
+          className={`px-3 py-1 rounded-xl flex items-center cursor-pointer gap-2 ${sortStatus === "ALPHABETICAL" && "bg-zinc-800"} hover:bg-zinc-800`}
         >
-          <BsSortAlphaDown
-            size={20}
-            className="text-gray-500  hover:text-gray-200 cursor-pointer "
-          />
-          <p className="text-md text-gray-300">Alfavit</p>
+          <BsSortAlphaDown size={18} className="text-gray-400" />
+          <p className="text-sm text-gray-300">Alfavit</p>
         </div>
         <div
           onClick={() => setSort("OLDEST")}
-          className={`w-1/3 h-1/2  rounded-2xl flex items-center justify-center cursor-pointer gap-2  ${sortStatus === "OLDEST" && "bg-gray-800"}  hover:bg-gray-800`}
+          className={`px-3 py-1 rounded-xl flex items-center cursor-pointer gap-2 ${sortStatus === "OLDEST" && "bg-zinc-800"} hover:bg-zinc-800`}
         >
-          <HiSortAscending
-            size={20}
-            className="text-gray-500  hover:text-gray-200 cursor-pointer "
-          />
-          <p className="text-md text-gray-300">Eski</p>
+          <HiSortAscending size={18} className="text-gray-400" />
+          <p className="text-sm text-gray-300">Eski</p>
         </div>
       </div>
-      <div className="w-full h-full flex flex-1 overflow-y-auto no-scrollbar flex-col">
-        {/* mana shu yerda chizamiz */}
 
-        {data?.map((item, index: number) => (
+      {/* notes container */}
+      <div className="w-full flex-1 overflow-y-auto no-scrollbar flex-col division-y division-zinc-800">
+        {data?.map((item, index) => (
           <div
             key={index + 1}
-            className={`w-full h-28 flex flex-col px-6 py-2 border ${item._id === id && "bg-gray-800"} hover:bg-gray-800 cursor-pointer border-gray-600`}
+            onClick={() => setId(item._id)}
+            className={`w-full h-24 flex flex-col justify-center px-4 py-2 border-b ${item._id === id ? "bg-zinc-800/80" : ""} hover:bg-zinc-800/50 cursor-pointer border-zinc-800/60 transition-colors`}
           >
-            <div className="flex items-center  w-full h-1/2 justify-between ">
-              <div className=" w-1/2 flex items-center  gap-2 h-full">
-                <CiClock1 size={17} className="text-gray-300" />
-                <p className="text-sm text-gray-400">
+            <div className="flex items-center w-full justify-between">
+              <div className="flex items-center gap-1.5">
+                <CiClock1 size={14} className="text-gray-400" />
+                <p className="text-xs text-gray-400">
                   {formatDate(item.createdAt)}
                 </p>
               </div>
-              <div className="w-1/2 h-full flex gap-1 items-center justify-end">
+              <div
+                className="flex gap-2 items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   disabled={isPending}
                   onClick={() => togglePin(item._id)}
-                  className={`p-1 flex items-center ${(status === "ARCHIVE" || status === "TRASH") && "hidden"} cursor-pointer justify-center  rounded-md   hover:bg-gray-600`}
+                  className={`p-1 flex items-center ${(status === "ARCHIVE" || status === "TRASH") && "hidden"} cursor-pointer justify-center rounded-md hover:bg-zinc-700`}
                 >
                   {item.isPinned ? (
-                    <RiUnpinLine
-                      title="unpin"
-                      size={20}
-                      className="text-white"
-                    />
+                    <RiUnpinLine size={16} className="text-emerald-400" />
                   ) : (
-                    <CiMapPin title="pin" size={20} className="text-white" />
+                    <CiMapPin size={16} className="text-gray-400" />
                   )}
-                </button>
-                <button
-                  title="note"
-                  onClick={() => setId(item._id)}
-                  className="p-1 flex items-center cursor-pointer justify-center  rounded-md   hover:bg-gray-600"
-                >
-                  <HiOutlineArrowsExpand size={20} className="text-white" />
                 </button>
               </div>
             </div>
-
-            <div className="flex items-center mt-1">
-              <h1 className="text-xl text-white line-clamp-1 ">{item.title}</h1>
-            </div>
-
-            <div className="flex items-center mt-1 ">
-              <p className="text-md text-gray-400 line-clamp-1 ">
-                {item.content}
-              </p>
-            </div>
+            <h1 className="text-base font-semibold text-white mt-1 line-clamp-1">
+              {item.title}
+            </h1>
+            <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
+              {item.content}
+            </p>
           </div>
         ))}
       </div>
+
       <button
         onClick={() => setOpen()}
-        className="w-15 h-15 absolute text-white  hover:bg-white/20 bg-white/10 backdrop-blur-md border border-white/20  flex items-center justify-center rounded-full text-xl cursor-pointer  bottom-10 left-5  transition-all "
+        className="
+          w-12 h-12 text-white bg-emerald-600 flex items-center justify-center rounded-full text-xl cursor-pointer shadow-lg shadow-black/40 transition-all z-20 hover:scale-105
+          
+          /* Mobil ekranlarda oynaga mixlanadi va sal balandroq chiqadi (telefon pastki menyusiga xalaqit bermasligi uchun) */
+          fixed bottom-24 right-4 
+          
+          /* Desktop (Kompyuter - md noutbuk) ekraniga o'tganda sening eskidek mutloq joyiga qaytadi */
+          md:absolute md:bottom-14 md:right-4
+        "
       >
-        <FaPlus size={20} />
+        <FaPlus size={18} />
       </button>
     </div>
   );
